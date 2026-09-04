@@ -1,211 +1,184 @@
-import { useState, useEffect } from 'react';
-import { apiCall } from '../api/client';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+// src/pages/GanadoPage.tsx
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import type { Animal } from '../types';
 
-interface Animal { 
-    id: number; 
-    ear_tag: string; 
-    breed: string; 
-    gender: string; 
-    weight: number | null; 
-    status: string; 
-}
-
-declare module 'jspdf' { 
-    interface jsPDF { 
-        autoTable: (options: any) => jsPDF; 
-    } 
-}
+// Datos de prueba (Mock) actualizados con 'fechaRegistro' para cumplir con la interfaz Animal
+const mockAnimales: Animal[] = [
+  { 
+    id: '1', 
+    chapeta: 'COL-00123', 
+    especie: 'BOVINO', 
+    raza: 'Holstein', 
+    sexo: 'HEMBRA', 
+    fechaNacimiento: '2022-05-15', 
+    peso: 450, 
+    estado: 'ACTIVO', 
+    fincaId: 'finca-01',
+    fechaRegistro: '2024-01-10' // <-- Campo agregado
+  },
+  { 
+    id: '2', 
+    chapeta: 'COL-00124', 
+    especie: 'BOVINO', 
+    raza: 'Brahman', 
+    sexo: 'MACHO', 
+    fechaNacimiento: '2021-08-20', 
+    peso: 520, 
+    estado: 'ACTIVO', 
+    fincaId: 'finca-01',
+    fechaRegistro: '2024-01-12' // <-- Campo agregado
+  },
+  { 
+    id: '3', 
+    chapeta: 'COL-00125', 
+    especie: 'BOVINO', 
+    raza: 'Gyr', 
+    sexo: 'HEMBRA', 
+    fechaNacimiento: '2023-01-10', 
+    peso: 310, 
+    estado: 'ACTIVO', 
+    fincaId: 'finca-01',
+    fechaRegistro: '2024-02-05' // <-- Campo agregado
+  },
+  { 
+    id: '4', 
+    chapeta: 'COL-00126', 
+    especie: 'BOVINO', 
+    raza: 'Holstein', 
+    sexo: 'HEMBRA', 
+    fechaNacimiento: '2020-11-05', 
+    peso: 480, 
+    estado: 'VENDIDO', 
+    fincaId: 'finca-01',
+    fechaRegistro: '2023-11-20' // <-- Campo agregado
+  },
+];
 
 export default function GanadoPage() {
-    const [animales, setAnimales] = useState<Animal[]>([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ 
-        ear_tag: '', 
-        breed: '', 
-        gender: 'macho', 
-        weight: '' 
-    });
+  const [busqueda, setBusqueda] = useState('');
 
-    useEffect(() => { 
-        cargarAnimales(); 
-    }, []);
+  // Lógica de búsqueda en tiempo real (RF-019)
+  const animalesFiltrados = mockAnimales.filter(animal => 
+    animal.chapeta.toLowerCase().includes(busqueda.toLowerCase()) ||
+    animal.raza.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
-    const cargarAnimales = async () => {
-        try {
-            const data = await apiCall('/api/v1/ganado/');
-            setAnimales(Array.isArray(data) ? data : []);
-        } catch (error) { 
-            setAnimales([]); 
-        }
-    };
+  // Función auxiliar para el color del badge de estado (RF-010: Eliminación lógica)
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case 'ACTIVO': return 'bg-gavac-light text-gavac-primary border-gavac-primary/20';
+      case 'VENDIDO': return 'bg-gray-100 text-gray-600 border-gray-200';
+      case 'FALLECIDO': return 'bg-red-50 text-red-700 border-red-200';
+      case 'RETIRADO': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      default: return 'bg-gray-50 text-gray-600 border-gray-200';
+    }
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await apiCall('/api/v1/ganado/', { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    ...formData, 
-                    weight: formData.weight ? parseFloat(formData.weight) : null 
-                }) 
-            });
-            setShowModal(false);
-            setFormData({ ear_tag: '', breed: '', gender: 'macho', weight: '' });
-            cargarAnimales();
-        } catch (error: any) { 
-            alert('Error: ' + error.message); 
-        }
-    };
-
-    // Lógica de filtrado
-    const filteredAnimales = animales.filter(a => 
-        a.ear_tag.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        a.breed.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // Los botones solo se muestran si hay búsqueda activa
-    const showExportButtons = searchTerm.length > 0;
-
-    const exportarPDF = () => {
-        const doc = new jsPDF();
-        doc.setFontSize(18); doc.setTextColor(27, 94, 32); doc.text('GAVAC - Animales Filtrados', 14, 20);
-        doc.autoTable({ 
-            startY: 30, 
-            head: [['Arete', 'Raza', 'Sexo', 'Peso', 'Estado']], 
-            body: filteredAnimales.map(a => [a.ear_tag, a.breed, a.gender, a.weight ? `${a.weight}kg` : 'N/A', a.status]), 
-            theme: 'grid', 
-            headStyles: { fillColor: [27, 94, 32] } 
-        });
-        doc.save(`animales-filtrados-${Date.now()}.pdf`);
-    };
-
-    const exportarExcel = () => {
-        const data = [['Arete', 'Raza', 'Sexo', 'Peso', 'Estado'], ...filteredAnimales.map(a => [a.ear_tag, a.breed, a.gender, a.weight, a.status])];
-        const ws = XLSX.utils.aoa_to_sheet(data); 
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Animales'); 
-        XLSX.writeFile(wb, `animales-filtrados-${Date.now()}.xlsx`);
-    };
-
-    return (
+  return (
+    <div className="p-8 max-w-7xl mx-auto">
+      {/* Header del Módulo */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-            {/* Header con Título y Botón de Registro */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h1 className="text-3xl font-serif font-bold text-gavac-text mb-2">Registro de Animales</h1>
-                    <p className="text-gavac-textLight">Gestiona el inventario de tu hato ganadero</p>
-                </div>
-                <button 
-                    onClick={() => setShowModal(true)}
-                    className="bg-gavac-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-gavac-primaryHover hover:-translate-y-0.5 transition-all shadow-lg shadow-gavac-primary/20 flex items-center gap-2"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Registrar Animal
-                </button>
-            </div>
-
-            {/* Barra de Búsqueda y Exportación Condicional */}
-            <div className="bg-white rounded-xl border border-black/10 p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="flex items-center gap-2 bg-gavac-bg rounded-lg px-4 py-2.5 w-full md:w-96 text-gavac-textMuted">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="7" />
-                        <path d="M21 21l-4.3-4.3" />
-                    </svg>
-                    <input 
-                        type="text" 
-                        placeholder="Buscar por arete o raza..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-transparent border-none outline-none text-sm w-full text-gavac-text placeholder-gavac-textMuted" 
-                    />
-                </div>
-                
-                {/* Botones condicionales: Solo aparecen si hay búsqueda */}
-                <div className={`flex gap-2 transition-all duration-300 ${showExportButtons ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-4'}`}>
-                    <button onClick={exportarPDF} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors flex items-center gap-2">
-                        📄 PDF
-                    </button>
-                    <button onClick={exportarExcel} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors flex items-center gap-2">
-                        📊 Excel
-                    </button>
-                </div>
-            </div>
-
-            {/* Tabla de Animales */}
-            <div className="bg-white rounded-xl border border-black/10 overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-[#FAFAF8] border-b border-black/10">
-                        <tr>
-                            {['Arete', 'Raza', 'Sexo', 'Peso (kg)', 'Estado'].map(h => (
-                                <th key={h} className="px-6 py-4 text-left text-xs font-bold text-gavac-textMuted uppercase tracking-wider">{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-black/5">
-                        {filteredAnimales.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-gavac-textMuted">
-                                    No se encontraron animales {searchTerm && 'con ese criterio'}.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredAnimales.map((animal) => (
-                                <tr key={animal.id} className="hover:bg-gavac-bg transition-colors">
-                                    <td className="px-6 py-4 font-semibold text-gavac-text">{animal.ear_tag}</td>
-                                    <td className="px-6 py-4 text-gavac-textLight capitalize">{animal.breed}</td>
-                                    <td className="px-6 py-4 text-gavac-textLight capitalize">{animal.gender}</td>
-                                    <td className="px-6 py-4 text-gavac-textLight">{animal.weight ? `${animal.weight} kg` : 'N/A'}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 text-xs font-bold rounded-full ${animal.status === 'activo' ? 'bg-gavac-light text-gavac-accent' : 'bg-red-100 text-red-700'}`}>
-                                            {animal.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Modal de Registro */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-                        <h2 className="text-2xl font-serif font-bold text-gavac-text mb-4">Registrar Nuevo Animal</h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-gavac-text mb-2">Número de Arete *</label>
-                                <input type="text" required placeholder="Ej: ARG-004" className="w-full p-3 border border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-gavac-primary" value={formData.ear_tag} onChange={(e) => setFormData({...formData, ear_tag: e.target.value})} />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gavac-text mb-2">Raza *</label>
-                                <input type="text" required placeholder="Ej: Brahman" className="w-full p-3 border border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-gavac-primary" value={formData.breed} onChange={(e) => setFormData({...formData, breed: e.target.value})} />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gavac-text mb-2">Sexo *</label>
-                                <select className="w-full p-3 border border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-gavac-primary" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
-                                    <option value="macho">Macho</option>
-                                    <option value="hembra">Hembra</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gavac-text mb-2">Peso (kg)</label>
-                                <input type="number" step="0.1" placeholder="Ej: 250.5" className="w-full p-3 border border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-gavac-primary" value={formData.weight} onChange={(e) => setFormData({...formData, weight: e.target.value})} />
-                            </div>
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-black/10">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-2.5 text-gavac-textLight bg-gavac-bg rounded-lg hover:bg-[#EDE8E0] transition-colors font-semibold">Cancelar</button>
-                                <button type="submit" className="px-6 py-2.5 text-white bg-gavac-primary rounded-lg hover:bg-gavac-primaryHover transition-colors font-semibold shadow-md">Guardar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+          <h1 className="text-3xl font-bold text-gavac-text">Inventario de Ganado</h1>
+          <p className="text-gavac-textMuted mt-1">Gestión y seguimiento del hato (RF-018)</p>
         </div>
-    );
+        <Link 
+          to="/app/ganado/nuevo" 
+          className="inline-flex items-center justify-center gap-2 bg-gavac-primary text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gavac-primaryHover transition-colors shadow-sm"
+        >
+          <span>➕</span> Registrar Animal
+        </Link>
+      </div>
+
+      {/* Barra de Búsqueda y Filtros (RF-019) */}
+      <div className="bg-gavac-card p-4 rounded-xl border border-gavac-border shadow-sm mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gavac-textMuted">🔍</span>
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar por chapeta o raza..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-gavac-bg border border-gavac-border rounded-lg focus:ring-2 focus:ring-gavac-primary/20 focus:border-gavac-primary outline-none transition text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Tabla de Inventario */}
+      <div className="bg-gavac-card rounded-xl border border-gavac-border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gavac-bg border-b border-gavac-border">
+              <tr>
+                <th className="px-6 py-4 font-semibold text-gavac-textMuted">Chapeta</th>
+                <th className="px-6 py-4 font-semibold text-gavac-textMuted">Especie / Raza</th>
+                <th className="px-6 py-4 font-semibold text-gavac-textMuted">Sexo</th>
+                <th className="px-6 py-4 font-semibold text-gavac-textMuted">Peso</th>
+                <th className="px-6 py-4 font-semibold text-gavac-textMuted">Estado</th>
+                <th className="px-6 py-4 font-semibold text-gavac-textMuted text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gavac-border">
+              {animalesFiltrados.length > 0 ? (
+                animalesFiltrados.map((animal) => (
+                  <tr key={animal.id} className="hover:bg-gavac-bg/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="font-mono font-bold text-gavac-text">{animal.chapeta}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-gavac-text">{animal.especie}</div>
+                      <div className="text-xs text-gavac-textMuted">{animal.raza}</div>
+                    </td>
+                    <td className="px-6 py-4 text-gavac-text">
+                      {animal.sexo === 'MACHO' ? '♂️ Macho' : '♀️ Hembra'}
+                    </td>
+                    <td className="px-6 py-4 text-gavac-text font-medium">
+                      {animal.peso} kg
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEstadoColor(animal.estado)}`}>
+                        {animal.estado}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="text-gavac-primary hover:text-gavac-primaryHover font-medium text-sm mr-3">
+                        Ver
+                      </button>
+                      <button className="text-gray-500 hover:text-gray-700 font-medium text-sm">
+                        Editar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gavac-textMuted">
+                    No se encontraron animales con esa búsqueda.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Paginación simple (Visual por ahora) */}
+        <div className="px-6 py-4 border-t border-gavac-border bg-gavac-bg/30 flex items-center justify-between">
+          <span className="text-sm text-gavac-textMuted">
+            Mostrando {animalesFiltrados.length} de {mockAnimales.length} animales
+          </span>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 text-sm border border-gavac-border rounded bg-white text-gavac-textMuted disabled:opacity-50" disabled>
+              Anterior
+            </button>
+            <button className="px-3 py-1 text-sm border border-gavac-border rounded bg-white text-gavac-textMuted disabled:opacity-50" disabled>
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

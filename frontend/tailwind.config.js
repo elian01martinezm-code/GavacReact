@@ -1,3 +1,4 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -8,19 +9,16 @@ export default {
     extend: {
       colors: {
         gavac: {
-          bg: '#F7F4EF',
-          text: '#1A1A14',
-          textLight: '#4A4A40',
-          textMuted: '#8A8A7A',
-          primary: '#1B5E20',
-          primaryHover: '#2E7D32',
-          light: '#EAF3DE',
-          accent: '#3B6D11',
+          primary: '#166534',       // Verde bosque profundo (Profesional, serio)
+          primaryHover: '#14532d',  // Verde más oscuro para efectos hover
+          accent: '#65a30d',        // Verde lima (Toque tecnológico del logo)
+          bg: '#F8FAFC',            // Fondo gris-azulado muy suave (menos cansado que blanco)
+          card: '#FFFFFF',          // Blanco puro para tarjetas
+          text: '#1E293B',          // Gris oscuro profesional para textos principales
+          textMuted: '#64748B',     // Gris medio para textos secundarios
+          light: '#F0FDF4',         // Verde muy pálido para fondos de alertas o badges
+          border: '#E2E8F0',        // Bordes suaves y elegantes
         }
-      },
-      fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
-        serif: ['DM Serif Display', 'serif'],
       }
     },
   },

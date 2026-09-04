@@ -7,10 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencias
 node_modules
 dist
 dist-ssr
 *.local
+
+# Archivos de entorno (¡MUY IMPORTANTE!)
+.env
+.env.local
+.env.*.local
+
+# Caché y builds de TypeScript/Vite
+*.tsbuildinfo
+.vite
 
 # Editor directories and files
 .vscode/*
