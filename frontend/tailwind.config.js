@@ -1,4 +1,3 @@
-// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -9,16 +8,23 @@ export default {
     extend: {
       colors: {
         gavac: {
-          primary: '#166534',       // Verde bosque profundo (Profesional, serio)
-          primaryHover: '#14532d',  // Verde más oscuro para efectos hover
-          accent: '#65a30d',        // Verde lima (Toque tecnológico del logo)
-          bg: '#F8FAFC',            // Fondo gris-azulado muy suave (menos cansado que blanco)
-          card: '#FFFFFF',          // Blanco puro para tarjetas
-          text: '#1E293B',          // Gris oscuro profesional para textos principales
-          textMuted: '#64748B',     // Gris medio para textos secundarios
-          light: '#F0FDF4',         // Verde muy pálido para fondos de alertas o badges
-          border: '#E2E8F0',        // Bordes suaves y elegantes
+          sidebar: '#1e3a2f',      // Verde oscuro profundo (Sidebar)
+          sidebarHover: '#2d4a3e',  // Verde un poco más claro para hover
+          primary: '#4a7c59',       // Verde medio (Botones, acentos)
+          primaryHover: '#3a6346',  // Verde oscuro para hover de botones
+          bg: '#f5f0e8',            // Beige suave (Fondo general)
+          card: '#ffffff',          // Blanco (Tarjetas)
+          border: '#e5e0d8',        // Beige grisáceo (Bordes sutiles)
+          text: '#1a1a1a',          // Negro suave (Títulos)
+          textMuted: '#6b7280',     // Gris (Textos secundarios)
+          success: '#10b981',       // Verde brillante (Estados activos)
+          warning: '#f59e0b',       // Naranja (Alertas, en proceso)
+          danger: '#ef4444',        // Rojo (Eliminados, alertas críticas)
         }
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Merriweather', 'serif'], // Para títulos elegantes si los usas
       }
     },
   },

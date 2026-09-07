@@ -1,102 +1,81 @@
-import { useState } from 'react';
+import { Plus, Search, Filter } from 'lucide-react';
 
-interface RegistroProduccion {
-    id: number;
-    animal: string;
-    tipo: string;
-    cantidad: number;
-    unidad: string;
-    fecha: string;
-}
+const eventos = [
+  { fecha: '2025-07-20', chapeta: '0012', tipo: 'Monta', estado: 'En proceso', observaciones: '-' },
+  { fecha: '2025-07-15', chapeta: '0015', tipo: 'Inseminación', estado: 'Confirmada', observaciones: 'Preñada' },
+  { fecha: '2025-07-10', chapeta: '0011', tipo: 'Parto', estado: 'Completado', observaciones: 'Hembra con cría' },
+  { fecha: '2025-06-28', chapeta: '0013', tipo: 'Monta', estado: 'En proceso', observaciones: '-' },
+  { fecha: '2025-06-20', chapeta: '0014', tipo: 'Inseminación', estado: 'Confirmada', observaciones: 'Preñada' },
+  { fecha: '2025-06-15', chapeta: '0010', tipo: 'Parto', estado: 'Completado', observaciones: 'Macho' },
+];
 
-export default function ProduccionPage() {
-    const [showModal, setShowModal] = useState(false);
-    const [registros] = useState<RegistroProduccion[]>([
-        { id: 1, animal: 'ARG-002', tipo: 'Leche', cantidad: 12.5, unidad: 'litros', fecha: '2026-08-20' },
-        { id: 2, animal: 'ARG-001', tipo: 'Peso', cantidad: 285, unidad: 'kg', fecha: '2026-08-18' },
-        { id: 3, animal: 'ARG-003', tipo: 'Leche', cantidad: 8.3, unidad: 'litros', fecha: '2026-08-20' },
-    ]);
+const estadoColors: Record<string, string> = {
+  'Completado': 'bg-emerald-100 text-emerald-700',
+  'Confirmada': 'bg-blue-100 text-blue-700',
+  'En proceso': 'bg-orange-100 text-orange-700',
+};
 
-    const stats = {
-        produccionLeche: '20.8 L/día',
-        animalesProduccion: 2,
-        gananciaPeso: '+15 kg/mes',
-        eficiencia: '92%'
-    };
-
-    return (
+export default function ReproduccionPage() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-            <div className="flex justify-between items-start mb-8">
-                <div>
-                    <h1 className="text-3xl font-serif font-bold text-gavac-text mb-2">Producción y Peso</h1>
-                    <p className="text-gavac-textLight">Seguimiento de producción lechera, control de pesos y ganancias</p>
-                </div>
-                <button 
-                    onClick={() => setShowModal(true)}
-                    className="bg-gavac-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-gavac-primaryHover hover:-translate-y-0.5 transition-all shadow-lg shadow-gavac-primary/20"
-                >
-                    + Nuevo Registro
-                </button>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white rounded-xl border border-black/10 p-6">
-                    <p className="text-xs font-bold text-gavac-textMuted uppercase tracking-wide mb-2">Producción Leche</p>
-                    <p className="text-3xl font-serif font-bold text-gavac-primary">{stats.produccionLeche}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-black/10 p-6">
-                    <p className="text-xs font-bold text-gavac-textMuted uppercase tracking-wide mb-2">Animales en Producción</p>
-                    <p className="text-3xl font-serif font-bold text-gavac-text">{stats.animalesProduccion}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-black/10 p-6">
-                    <p className="text-xs font-bold text-gavac-textMuted uppercase tracking-wide mb-2">Ganancia de Peso</p>
-                    <p className="text-3xl font-serif font-bold text-gavac-text">{stats.gananciaPeso}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-black/10 p-6">
-                    <p className="text-xs font-bold text-gavac-textMuted uppercase tracking-wide mb-2">Eficiencia</p>
-                    <p className="text-3xl font-serif font-bold text-gavac-primary">{stats.eficiencia}</p>
-                </div>
-            </div>
-
-            {/* Tabla */}
-            <div className="bg-white rounded-xl border border-black/10 overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-[#FAFAF8] border-b border-black/10">
-                        <tr>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gavac-textMuted uppercase tracking-wider">Animal</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gavac-textMuted uppercase tracking-wider">Tipo</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gavac-textMuted uppercase tracking-wider">Cantidad</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gavac-textMuted uppercase tracking-wider">Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-black/5">
-                        {registros.map((registro) => (
-                            <tr key={registro.id} className="hover:bg-gavac-bg transition-colors">
-                                <td className="px-6 py-4 font-semibold text-gavac-text">{registro.animal}</td>
-                                <td className="px-6 py-4 text-gavac-textLight">{registro.tipo}</td>
-                                <td className="px-6 py-4 text-gavac-textLight">{registro.cantidad} {registro.unidad}</td>
-                                <td className="px-6 py-4 text-gavac-textMuted">{registro.fecha}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-                        <h2 className="text-2xl font-serif font-bold text-gavac-text mb-4">Nuevo Registro de Producción</h2>
-                        <p className="text-gavac-textMuted text-sm mb-4">Módulo en desarrollo. Próximamente podrás registrar producción aquí.</p>
-                        <button 
-                            onClick={() => setShowModal(false)}
-                            className="w-full px-6 py-2.5 text-gavac-textLight bg-gavac-bg rounded-lg hover:bg-[#EDE8E0] transition-colors font-semibold"
-                        >
-                            Cerrar
-                        </button>
-                    </div>
-                </div>
-            )}
+          <h1 className="font-serif text-4xl font-bold text-gavac-text mb-1">Reproducción</h1>
+          <p className="text-sm text-gavac-muted">Controla los eventos reproductivos de tu ganado</p>
         </div>
-    );
+        <button className="px-5 py-2.5 rounded-lg bg-gavac-primary text-white font-semibold text-sm flex items-center gap-2 hover:bg-gavac-dark transition-colors shadow-sm">
+          <Plus className="h-4 w-4" />
+          Registrar evento
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gavac-border flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gavac-muted" />
+          <input type="text" placeholder="Buscar por chapeta o tipo..." className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gavac-border text-sm outline-none focus:border-gavac-primary" />
+        </div>
+        <button className="px-4 py-2.5 rounded-lg border border-gavac-border text-sm font-medium text-gavac-muted hover:bg-gavac-bg flex items-center gap-2">
+          <Filter className="h-4 w-4" />
+          Filtros
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gavac-border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gavac-bg border-b border-gavac-border">
+              <tr>
+                {['Fecha', 'Chapeta', 'Tipo', 'Estado', 'Observaciones'].map((h) => (
+                  <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-gavac-muted uppercase tracking-wider">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gavac-border">
+              {eventos.map((e, i) => (
+                <tr key={i} className="hover:bg-gavac-bg/50 transition-colors">
+                  <td className="px-5 py-4 text-sm text-gavac-text">{e.fecha}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-gavac-text">{e.chapeta}</td>
+                  <td className="px-5 py-4 text-sm text-gavac-text">{e.tipo}</td>
+                  <td className="px-5 py-4">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${estadoColors[e.estado]}`}>
+                      {e.estado}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 text-sm text-gavac-text">{e.observaciones}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center justify-between px-5 py-4 border-t border-gavac-border bg-gavac-bg/30">
+          <p className="text-xs text-gavac-muted">Mostrando 1 - 6 de 18</p>
+          <div className="flex items-center gap-1">
+            {[1, 2, 3].map((p) => (
+              <button key={p} className={`w-8 h-8 rounded-lg text-xs font-medium ${p === 1 ? 'bg-gavac-primary text-white' : 'text-gavac-muted hover:bg-gavac-bg'}`}>{p}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

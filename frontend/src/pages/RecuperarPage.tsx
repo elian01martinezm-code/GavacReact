@@ -1,7 +1,7 @@
 // src/pages/RecuperarPage.tsx
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import logoGavac from '../assets/logo-gavac.png'; // <-- .png en lugar de .jpg 
+import logoGavac from '../assets/logo_gavac.png'; 
 
 export default function RecuperarPage() {
   const [email, setEmail] = useState('');
